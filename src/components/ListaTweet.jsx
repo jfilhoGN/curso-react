@@ -13,6 +13,10 @@ const ListaTweet = props => {
     );
 };
 
+ListaTweet.defaultProps = {
+    tweets: []
+}
+
 ListaTweet.propTypes = {
     tweets: PropTypes.array
 };

@@ -1,27 +1,41 @@
 import React, { Component } from 'react';
-import PropTypes from 'prop-types';
 import { Button, Container, Form, FormControl, InputGroup, Row, Alert } from 'react-bootstrap';
 import ListaTweet from '../components/ListaTweet';
 import UserService from '../services/UserService';
 import UserList from '../components/UserList';
-
+import TweetService from '../services/TweetService';
+import { connect } from 'react-redux';
 
 class Home extends Component {
-
-    static propTypes = {
-        tweets: PropTypes.array,
-        onTweet: PropTypes.func.isRequired
-    };
 
     state = {
         currentPost: '',
         alertVisible: false,
-        users: []
+        users: [],
+        tweets: []
     };
 
     componentDidMount = () => {
         UserService.getAllUsers().then(users => {
             this.setState({ users });
+        })
+        if (this.props.usuarioLogado !== undefined) {
+            this.getUserFeed(this.props.usuarioLogado);
+        }
+    }
+
+    componentDidUpdate(oldProps) {
+        if (this.props.usuarioLogado !== oldProps.usuarioLogado) {
+            this.getUserFeed(this.props.usuarioLogado);
+        }
+    }
+
+    getUserFeed = (user) => {
+        this.setState(() => {
+            TweetService.getUserFeed(user)
+                .then(tweets => {
+                    this.setState({ tweets });
+                })
         })
     }
 
@@ -31,9 +45,9 @@ class Home extends Component {
 
     onPost = () => {
 
-        const { currentUser } = this.props;
+        const { usuarioLogado } = this.props;
 
-        if (!currentUser) {
+        if (!usuarioLogado) {
             this.setState({ alertVisible: true })
             return;
         }
@@ -41,14 +55,14 @@ class Home extends Component {
         const content = this.state.currentPost;
 
         this.setState({ currentPost: '', alertVisible: false }, () => {
-            this.props.onTweet(content);
+            TweetService.newTweet(content)
+                .then(() => setTimeout(() => this.getUserFeed(usuarioLogado), 1500))
         })
     };
 
     render() {
 
-        const { currentPost, alertVisible, users } = this.state;
-        const { tweets } = this.props;
+        const { currentPost, alertVisible, users, tweets } = this.state;
 
         return (
             <Container style={{ marginTop: 30 }}>
@@ -77,5 +91,10 @@ class Home extends Component {
     }
 }
 
+const mapStateToProps = (state) => {
+    return {
+        usuarioLogado: state.usuario.usuarioAtual
+    }
+}
 
-export default Home;
+export default connect(mapStateToProps)(Home);

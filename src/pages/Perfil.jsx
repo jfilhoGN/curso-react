@@ -3,6 +3,7 @@ import { Button, Container, Row } from 'react-bootstrap';
 import ListaTweet from '../components/ListaTweet';
 import UserService from '../services/UserService';
 import TweetService from '../services/TweetService';
+import { connect } from 'react-redux';
 
 class Perfil extends Component {
 
@@ -26,12 +27,17 @@ class Perfil extends Component {
         })
     }
 
+    onFollow = user => {
+        UserService.followUser(user).then(() =>
+            alert("Você esta seguindo " + user.userName));
+    }
+
 
     render() {
         const { user, tweets } = this.state;
-        const { currentUser, onFollow } = this.props
+        const { usuarioLogado } = this.props
 
-        const shouldShowFollowButton = currentUser !== undefined && user !== undefined && currentUser.uid !== user.uid;
+        const shouldShowFollowButton = usuarioLogado !== undefined && user !== undefined && usuarioLogado.uid !== user.uid;
         return (
             <Container>
                 <Row className="profile-section">
@@ -43,7 +49,7 @@ class Perfil extends Component {
                     </div>
                     {shouldShowFollowButton &&
                         <div className="ml-auto">
-                            <Button onClick={() => onFollow(user)}>Seguir</Button>
+                            <Button onClick={() => this.onFollow(user)}>Seguir</Button>
                         </div>
                     }
                 </Row>
@@ -55,4 +61,11 @@ class Perfil extends Component {
     }
 }
 
-export default Perfil;
+const mapStateToProps = (state) => {
+    return {
+        usuarioLogado: state.usuario.usuarioAtual
+    }
+}
+
+
+export default connect(mapStateToProps)(Perfil);
